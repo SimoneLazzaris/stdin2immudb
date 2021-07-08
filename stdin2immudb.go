@@ -20,6 +20,8 @@ var config struct {
 	Password  string
 	DBName    string
 	BatchSize int
+	Offset    int
+	Prefix    string
 }
 
 func cfginit() {
@@ -29,6 +31,8 @@ func cfginit() {
 	flag.StringVar(&config.Password, "pass", "immudb", "Password for authenticating to immudb")
 	flag.StringVar(&config.DBName, "db", "defaultdb", "Name of the database to use")
 	flag.IntVar(&config.BatchSize, "batchsize", 1000, "Batch size")
+	flag.IntVar(&config.Offset, "offset", 0, "Initial counter value")
+	flag.StringVar(&config.Prefix, "prefix", "LINE", "Prefix for Key generation")
 	flag.Parse()
 }
 
@@ -64,7 +68,7 @@ func inserter(ch chan string, out chan bool) {
 	t0 := time.Now()
 	for line := range ch {
 		kvs[cnt] = &schema.KeyValue{
-			Key:   []byte(fmt.Sprintf("LINE%.9d", idx)),
+			Key:   []byte(fmt.Sprintf("%s%.9d", config.Prefix, idx+config.Offset)),
 			Value: []byte(line),
 		}
 		idx++
