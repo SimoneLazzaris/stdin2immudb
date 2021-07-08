@@ -1,15 +1,16 @@
 package main
+
 import (
+	"bufio"
 	"context"
 	"flag"
-	"log"
-	"bufio"
-	"os"
 	"fmt"
-	"time"
 	"github.com/codenotary/immudb/pkg/api/schema"
 	immuclient "github.com/codenotary/immudb/pkg/client"
 	"google.golang.org/grpc/metadata"
+	"log"
+	"os"
+	"time"
 )
 
 var config struct {
@@ -30,7 +31,6 @@ func cfginit() {
 	flag.IntVar(&config.BatchSize, "batchsize", 1000, "Batch size")
 	flag.Parse()
 }
-
 
 func connect() (client immuclient.ImmuClient, ctx context.Context) {
 	opts := immuclient.DefaultOptions().WithAddress(config.IpAddr).WithPort(config.Port)
@@ -53,7 +53,7 @@ func connect() (client immuclient.ImmuClient, ctx context.Context) {
 		log.Fatalln("Failed to use the database. Reason:", err)
 	}
 	ctx = metadata.NewOutgoingContext(ctx, metadata.Pairs("authorization", udr.GetToken()))
-	return 
+	return
 }
 
 func inserter(ch chan string, out chan bool) {
@@ -63,23 +63,23 @@ func inserter(ch chan string, out chan bool) {
 	var cnt = 0
 	t0 := time.Now()
 	for line := range ch {
-		kvs[cnt] = &schema.KeyValue {
-			Key: []byte(fmt.Sprintf("LINE%.9d",idx)),
+		kvs[cnt] = &schema.KeyValue{
+			Key:   []byte(fmt.Sprintf("LINE%.9d", idx)),
 			Value: []byte(line),
 		}
 		idx++
 		cnt++
-		if cnt==config.BatchSize {
+		if cnt == config.BatchSize {
 			kvList := &schema.SetRequest{KVs: kvs}
 			if _, err := client.SetAll(ctx, kvList); err != nil {
 				log.Fatalln("Failed to submit the batch. Reason:", err)
 			} else {
 				log.Printf("Inserted %d lines", idx)
 			}
-			cnt=0
+			cnt = 0
 		}
 	}
-	if cnt>0 {
+	if cnt > 0 {
 		kvs = kvs[:cnt]
 		kvList := &schema.SetRequest{KVs: kvs}
 		if _, err := client.SetAll(ctx, kvList); err != nil {
@@ -94,8 +94,8 @@ func inserter(ch chan string, out chan bool) {
 
 func main() {
 	cfginit()
-	ch := make (chan string)
-	out := make (chan bool)
+	ch := make(chan string)
+	out := make(chan bool)
 	go inserter(ch, out)
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
@@ -105,5 +105,5 @@ func main() {
 		log.Println(err)
 	}
 	close(ch)
-	<- out
+	<-out
 }
