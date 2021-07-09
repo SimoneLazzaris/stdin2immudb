@@ -1,6 +1,6 @@
 # stdid2immudb 
 
-A simple tool for inserting lines into immudb.
+A simple tool for inserting lines into [immudb](https://github.com/codenotary/immudb) - the immutable database.
 
 For every line fetched on stdin, it will generate Key-Value pair, using as key of the form `LINE000000000`. 
 You can change the prefix and the initial counter value using command line options.
