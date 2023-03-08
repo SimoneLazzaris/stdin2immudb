@@ -24,6 +24,7 @@ var config struct {
 	Prefix    string
 	RBack     bool
 	TStamp    bool
+	Verbose   bool
 }
 
 func cfginit() {
@@ -37,6 +38,7 @@ func cfginit() {
 	flag.StringVar(&config.Prefix, "prefix", "LINE", "Prefix for Key generation")
 	flag.BoolVar(&config.RBack, "readback", false, "Don't write, read back instead (and check value)")
 	flag.BoolVar(&config.TStamp, "timestamp", false, "Use current epoch as numeric part of the key (instead a progressive integer)")
+	flag.BoolVar(&config.Verbose, "verbose", false, "Set verbose output")
 	flag.Parse()
 }
 
@@ -75,7 +77,7 @@ func inserter(ch chan string, out chan bool) {
 			kvList := &schema.SetRequest{KVs: kvs}
 			if _, err := client.SetAll(ctx, kvList); err != nil {
 				log.Fatalln("Failed to submit the batch. Reason:", err)
-			} else {
+			} else if config.Verbose {
 				log.Printf("Inserted %d lines", idx)
 			}
 			cnt = 0
@@ -86,7 +88,7 @@ func inserter(ch chan string, out chan bool) {
 		kvList := &schema.SetRequest{KVs: kvs}
 		if _, err := client.SetAll(ctx, kvList); err != nil {
 			log.Fatalln("Failed to submit the batch. Reason:", err)
-		} else {
+		} else if config.Verbose {
 			log.Printf("Inserted %d lines", idx)
 		}
 	}
@@ -110,7 +112,7 @@ func checker(ch chan string, out chan bool) {
 			readback, err := client.GetAll(ctx, keys)
 			if err != nil {
 				log.Fatalln("Failed to read the batch. Reason:", err)
-			} else {
+			} else if config.Verbose {
 				log.Printf("Read %d lines", idx)
 			}
 			for j := 0; j < cnt; j++ {
@@ -127,7 +129,7 @@ func checker(ch chan string, out chan bool) {
 		readback, err := client.GetAll(ctx, keys)
 		if err != nil {
 			log.Fatalln("Failed to read the batch. Reason:", err)
-		} else {
+		} else if config.Verbose {
 			log.Printf("Read %d lines", idx)
 		}
 		for j := 0; j < cnt; j++ {
