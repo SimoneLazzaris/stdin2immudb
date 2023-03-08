@@ -23,6 +23,7 @@ var config struct {
 	Offset    int
 	Prefix    string
 	RBack     bool
+	TStamp    bool
 }
 
 func cfginit() {
@@ -35,6 +36,7 @@ func cfginit() {
 	flag.IntVar(&config.Offset, "offset", 0, "Initial counter value")
 	flag.StringVar(&config.Prefix, "prefix", "LINE", "Prefix for Key generation")
 	flag.BoolVar(&config.RBack, "readback", false, "Don't write, read back instead (and check value)")
+	flag.BoolVar(&config.TStamp, "timestamp", false, "Use current epoch as numeric part of the key (instead a progressive integer)")
 	flag.Parse()
 }
 
@@ -57,8 +59,14 @@ func inserter(ch chan string, out chan bool) {
 	var cnt = 0
 	t0 := time.Now()
 	for line := range ch {
+		var keystr string
+		if config.TStamp {
+			keystr = fmt.Sprintf("%s%.14d.%.4d", config.Prefix, time.Now().UnixMilli(), cnt)
+		} else {
+			keystr = fmt.Sprintf("%s%.9d", config.Prefix, idx+config.Offset)
+		}
 		kvs[cnt] = &schema.KeyValue{
-			Key:   []byte(fmt.Sprintf("%s%.9d", config.Prefix, idx+config.Offset)),
+			Key:   []byte(keystr),
 			Value: []byte(line),
 		}
 		idx++
