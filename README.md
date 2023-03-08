@@ -2,8 +2,7 @@
 
 A simple tool for inserting lines into [immudb](https://github.com/codenotary/immudb) - the immutable database.
 
-For every line fetched on stdin, it will generate Key-Value pair, using as key of the form `LINE000000000`. 
-You can change the prefix and the initial counter value using command line options.
+For every line fetched on stdin, it will generate Key-Value pair, using keys with the format `<prefix><progressive_number>`. `<prefix>` is `LINE` by default and `progressive_number` is a 14-digit number starting from 0000000000000 that is increased for any line. You can change the prefix and the initial counter value using command line options.
 
 Those KVs are accumulated in memory and when the configured batch size is reached, they are written to immudb in a single transaction. You can specify the transaction size using `-batchsize` option.
 
@@ -12,7 +11,7 @@ As an option, you can have the key composed of the current timestamp, plus a pro
 
 The actual key will be `<prefix><ms_timestamp>.<index>`
 
-Where `<prefix>` is the common prefix (default `LINE`) <ms_timestamp>` is the current epoch in milliseconds and `<index>` is the line position in the transaction that is being build.
+Where `<prefix>` is the common prefix (default `LINE`) `<ms_timestamp>` is the current epoch in milliseconds and `<index>` is the line position in the transaction that is being build.
 
 ## Build
 
