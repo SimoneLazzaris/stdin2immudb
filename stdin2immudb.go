@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"github.com/codenotary/immudb/pkg/api/schema"
 	immuclient "github.com/codenotary/immudb/pkg/client"
-	"google.golang.org/grpc/metadata"
 	"log"
 	"os"
 	"time"
@@ -42,24 +41,12 @@ func cfginit() {
 func connect() (client immuclient.ImmuClient, ctx context.Context) {
 	opts := immuclient.DefaultOptions().WithAddress(config.IpAddr).WithPort(config.Port)
 
-	client, err := immuclient.NewImmuClient(opts)
-	if err != nil {
-		log.Fatalln("Failed to connect. Reason:", err)
-	}
-
+	client = immuclient.NewClient().WithOptions(opts)
 	ctx = context.Background()
-
-	login, err := client.Login(ctx, []byte(config.Username), []byte(config.Password))
-	if err != nil {
-		log.Fatalln("Failed to login. Reason:", err.Error())
-	}
-	ctx = metadata.NewOutgoingContext(ctx, metadata.Pairs("authorization", login.GetToken()))
-
-	udr, err := client.UseDatabase(ctx, &schema.Database{DatabaseName: config.DBName})
+	err := client.OpenSession(ctx, []byte(config.Username), []byte(config.Password), config.DBName)
 	if err != nil {
 		log.Fatalln("Failed to use the database. Reason:", err)
 	}
-	ctx = metadata.NewOutgoingContext(ctx, metadata.Pairs("authorization", udr.GetToken()))
 	return
 }
 
